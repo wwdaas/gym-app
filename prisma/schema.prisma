@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+enum BookingStatus {
+  BOOKED
+  CANCELLED
+  CHECKED_IN
+}
+
+enum CheckInMethod {
+  SELF
+  ADMIN_OVERRIDE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(MEMBER)
+  phone        String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings         Booking[] @relation("MemberBookings")
+  checkInsRecorded CheckIn[] @relation("CheckInRecordedBy")
+}
+
+model Coach {
+  id        String   @id @default(cuid())
+  name      String
+  photoUrl  String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schedules Schedule[]
+}
+
+model CourseType {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  durationMinutes Int      @default(60)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  schedules Schedule[]
+}
+
+model Schedule {
+  id           String   @id @default(cuid())
+  courseTypeId String
+  courseType   CourseType @relation(fields: [courseTypeId], references: [id])
+
+  coachId String
+  coach   Coach  @relation(fields: [coachId], references: [id])
+
+  room        String
+  startTime   DateTime
+  endTime     DateTime
+  capacity    Int
+  isCancelled Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([startTime])
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  scheduleId String
+  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+  memberId   String
+  member     User     @relation("MemberBookings", fields: [memberId], references: [id])
+
+  status      BookingStatus @default(BOOKED)
+  bookedAt    DateTime      @default(now())
+  cancelledAt DateTime?
+
+  checkIn CheckIn?
+
+  @@index([scheduleId, memberId])
+  @@index([memberId])
+}
+
+model CheckIn {
+  id           String        @id @default(cuid())
+  bookingId    String        @unique
+  booking      Booking       @relation(fields: [bookingId], references: [id])
+  checkedInAt  DateTime      @default(now())
+  method       CheckInMethod @default(SELF)
+  recordedById String
+  recordedBy   User          @relation("CheckInRecordedBy", fields: [recordedById], references: [id])
+}
