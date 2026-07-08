@@ -6,6 +6,7 @@ const links = [
   { href: "/member", label: "首页" },
   { href: "/member/schedule", label: "课程表" },
   { href: "/member/bookings", label: "我的预约" },
+  { href: "/member/assistant", label: "预约助手" },
 ];
 
 export function MemberNav({

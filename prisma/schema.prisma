@@ -41,6 +41,15 @@ model User {
 
   bookings         Booking[] @relation("MemberBookings")
   checkInsRecorded CheckIn[] @relation("CheckInRecordedBy")
+  assistantChat    AssistantChat?
+}
+
+model AssistantChat {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  messages  String   // JSON-serialized ChatCompletionMessageParam[]
+  updatedAt DateTime @updatedAt
 }
 
 model Coach {
